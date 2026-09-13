@@ -1,15 +1,7 @@
 import { and, asc, eq, gte } from "drizzle-orm";
 import { getDb } from "@/db";
 import { donations } from "@/db/schema";
-
-function apiUser(request: Request) {
-  const userId = request.headers.get("oai-authenticated-user-id");
-  const email = request.headers.get("oai-authenticated-user-email");
-  const isLocal = ["localhost", "127.0.0.1"].includes(new URL(request.url).hostname);
-  if (userId && email) return { userId, email };
-  if (isLocal) return { userId: "local-preview", email: "preview@shareplate.local" };
-  return null;
-}
+import { canUseRole, requireApiProfile } from "@/lib/server/profile";
 
 function errorResponse(error: unknown) {
   console.error("Donation API error", error);
@@ -17,6 +9,8 @@ function errorResponse(error: unknown) {
 }
 
 export async function GET() {
+  const identity = await requireApiProfile();
+  if (identity.error) return identity.error;
   try {
     const db = getDb();
     const today = new Date();
@@ -29,12 +23,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const user = apiUser(request);
-  if (!user) return Response.json({ error: "Sign in is required." }, { status: 401 });
+  const identity = await requireApiProfile();
+  if (identity.error) return identity.error;
+  if (!canUseRole(identity.profile, "supplier")) return Response.json({ error: "A verified food-supplier account is required." }, { status: 403 });
   try {
     const payload = await request.json() as Record<string, unknown>;
     const foodDescription = String(payload.foodDescription ?? "").trim();
-    const supplierName = String(payload.supplierName ?? user.email).trim();
+    const supplierName = identity.profile.organizationName?.trim() || identity.user.email;
     const pickupAddress = String(payload.pickupAddress ?? "").trim();
     const pickupBy = String(payload.pickupBy ?? "");
     const servings = Number(payload.servings);
@@ -47,7 +42,7 @@ export async function POST(request: Request) {
     }
     const db = getDb();
     const [donation] = await db.insert(donations).values({
-      supplierUserId: user.userId,
+      supplierUserId: identity.user.userId,
       supplierName,
       foodDescription,
       servings,

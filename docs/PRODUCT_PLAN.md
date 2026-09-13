@@ -60,7 +60,9 @@ SharePlate coordinates same-day transfers of safe surplus food from verified sup
 - Next.js 16 + React 19 UI, built with Vinext for a Cloudflare Worker runtime
 - Next route handlers as the backend boundary
 - Cloudflare D1 + Drizzle for donations, claims, profiles, and community-post metadata
-- Platform-provided signed-in user headers for authenticated write operations
+- Platform-managed Sign in with ChatGPT, protected server-rendered routes, and server-side role authorization
+- First-account administrator bootstrap for the owner-private pilot
+- Protected admin console for organization verification and donation status operations
 - Static optimized image for the representative community post
 
 This stack keeps the pilot inexpensive and deployable as one service. The API and database layer are intentionally small so they can be replaced without rewriting the UI.

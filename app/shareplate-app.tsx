@@ -9,6 +9,7 @@ import {
   Clock3,
   Heart,
   Home,
+  LogOut,
   MapPin,
   MessageCircle,
   PackageCheck,
@@ -33,7 +34,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 
 type Role = "supplier" | "beneficiary" | "volunteer";
@@ -56,12 +56,16 @@ function Logo() {
   );
 }
 
-function NavItem({ icon: Icon, label, active = false }: { icon: typeof Home; label: string; active?: boolean }) {
-  return <button className={`nav-item ${active ? "nav-item-active" : ""}`}><Icon className="size-[1.1rem]" /><span>{label}</span></button>;
+function NavItem({ icon: Icon, label, active = false, href }: { icon: typeof Home; label: string; active?: boolean; href?: string }) {
+  const content = <><Icon className="size-[1.1rem]" /><span>{label}</span></>;
+  return href ? <a href={href} className={`nav-item ${active ? "nav-item-active" : ""}`}>{content}</a> : <button className={`nav-item ${active ? "nav-item-active" : ""}`}>{content}</button>;
 }
 
-export default function SharePlateApp() {
-  const [role, setRole] = useState<Role>("beneficiary");
+export default function SharePlateApp({ user, profile, signOutPath }: { user: { displayName: string; email: string }; profile: { role: Role; organizationName: string | null; verificationStatus: "pending" | "verified" | "rejected"; isAdmin: boolean }; signOutPath: string }) {
+  const role = profile.role;
+  const canDonate = role === "supplier" && profile.verificationStatus === "verified";
+  const canAccept = role === "beneficiary" && profile.verificationStatus === "verified";
+  const initials = user.displayName.split(/\s+/).map((word) => word[0]).join("").slice(0, 2).toUpperCase();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [accepted, setAccepted] = useState<number[]>([]);
@@ -110,12 +114,13 @@ export default function SharePlateApp() {
       inputSchema: { type: "object", properties: {}, additionalProperties: false },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
       execute() {
+        if (!canDonate) throw new Error("Only verified food suppliers can start a donation.");
         setDialogOpen(true);
         return { status: "form_open", published: false };
       },
     }, { signal: lifecycle.signal })).catch((error) => console.warn("WebMCP donation tool unavailable", error));
     return () => lifecycle.abort();
-  }, [liveDonations]);
+  }, [canDonate, liveDonations]);
 
   async function submitDonation(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -167,7 +172,9 @@ export default function SharePlateApp() {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" aria-label="Notifications" className="relative rounded-full"><Bell className="size-5" /><span className="absolute right-2 top-2 size-2 rounded-full bg-[#d7552d] ring-2 ring-[#f6f6f1]" /></Button>
-            <button className="flex size-10 items-center justify-center rounded-full bg-[#153f3a] text-sm font-bold text-white" aria-label="Open profile">AH</button>
+            <div className="hidden text-right sm:block"><p className="max-w-40 truncate text-sm font-bold">{user.displayName}</p><p className="max-w-40 truncate text-xs text-[#78908b]">{profile.organizationName ?? "Individual volunteer"}</p></div>
+            <span className="flex size-10 items-center justify-center rounded-full bg-[#153f3a] text-sm font-bold text-white" aria-label={`Signed in as ${user.displayName}`}>{initials}</span>
+            <a href={signOutPath} className="flex size-9 items-center justify-center rounded-full text-[#60756f] hover:bg-[#e8ece6]" aria-label="Sign out"><LogOut className="size-4" /></a>
           </div>
         </div>
       </header>
@@ -175,17 +182,11 @@ export default function SharePlateApp() {
       <div className="mx-auto grid max-w-[1440px] grid-cols-1 lg:grid-cols-[232px_minmax(0,1fr)]">
         <aside className="hidden min-h-[calc(100vh-72px)] border-r border-[#dfe4dc] px-5 py-8 lg:block">
           <nav className="space-y-1" aria-label="Main navigation">
-            <NavItem icon={Home} label="Today" active /><NavItem icon={Search} label="Find food" /><NavItem icon={PackageCheck} label="My pickups" /><NavItem icon={Users} label="Community" />
+            <NavItem icon={Home} label="Today" active href="/" /><NavItem icon={Search} label="Find food" /><NavItem icon={PackageCheck} label="My pickups" /><NavItem icon={Users} label="Community" />{profile.isAdmin && <NavItem icon={ShieldCheck} label="Admin console" href="/admin" />}
           </nav>
           <div className="mt-8 border-t border-[#dfe4dc] pt-6">
-            <p className="mb-3 px-3 text-xs font-bold uppercase tracking-[0.12em] text-[#78908b]">Your role</p>
-            <Tabs value={role} onValueChange={(value) => setRole(value as Role)}>
-              <TabsList className="grid w-full grid-cols-1 gap-1 bg-[#e8ece6] p-1" style={{ height: "auto" }}>
-                <TabsTrigger value="beneficiary" className="h-9 justify-start px-3">Beneficiary</TabsTrigger>
-                <TabsTrigger value="supplier" className="h-9 justify-start px-3">Food supplier</TabsTrigger>
-                <TabsTrigger value="volunteer" className="h-9 justify-start px-3">Volunteer</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <p className="mb-3 px-3 text-xs font-bold uppercase tracking-[0.12em] text-[#78908b]">Your account</p>
+            <div className="rounded-xl bg-[#e8ece6] p-3"><p className="text-sm font-bold capitalize">{role === "supplier" ? "Food supplier" : role}</p><p className={`mt-1 text-xs font-semibold capitalize ${profile.verificationStatus === "verified" ? "text-[#26705d]" : "text-[#b06a18]"}`}>{profile.verificationStatus}</p></div>
           </div>
           <div className="mt-8 rounded-2xl bg-[#153f3a] p-4 text-white">
             <ShieldCheck className="mb-5 size-6 text-[#f6b94b]" /><p className="font-display text-lg font-bold">Food safety first</p>
@@ -206,12 +207,12 @@ export default function SharePlateApp() {
               </p>
             </div>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild><Button size="lg" className="h-12 self-start rounded-full bg-[#d7552d] px-6 text-base text-white shadow-[0_10px_30px_rgba(215,85,45,0.22)] hover:bg-[#be4522]"><Plus className="size-5" /> Offer surplus food</Button></DialogTrigger>
+              {role === "supplier" && <DialogTrigger asChild><Button disabled={!canDonate} size="lg" className="h-12 self-start rounded-full bg-[#d7552d] px-6 text-base text-white shadow-[0_10px_30px_rgba(215,85,45,0.22)] hover:bg-[#be4522]"><Plus className="size-5" /> {canDonate ? "Offer surplus food" : "Verification pending"}</Button></DialogTrigger>}
               <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl border-0 p-0 sm:max-w-xl">
                 <form onSubmit={submitDonation}>
                   <DialogHeader className="border-b border-[#e4e8e1] px-7 py-6"><DialogTitle className="font-display text-2xl">Offer food for today</DialogTitle><DialogDescription>Nearby verified homes will be notified immediately.</DialogDescription></DialogHeader>
                   <div className="grid gap-5 px-7 py-6 sm:grid-cols-2">
-                    <label className="field sm:col-span-2">Supplier or organization<Input required name="supplierName" placeholder="e.g. Saffron Table" /></label>
+                    <label className="field sm:col-span-2">Supplier or organization<Input required name="supplierName" defaultValue={profile.organizationName ?? ""} placeholder="e.g. Saffron Table" /></label>
                     <label className="field sm:col-span-2">Food description<Input required name="foodDescription" placeholder="e.g. Vegetable biryani and dal" /></label>
                     <label className="field">Estimated servings<Input required name="servings" type="number" min="1" placeholder="40" /></label>
                     <label className="field">Pickup by<Input required name="pickupBy" type="time" /></label>
@@ -252,7 +253,7 @@ export default function SharePlateApp() {
                         <p className="mt-1 text-sm text-[#6b7d78]">{donation.supplier} · {donation.distance}</p>
                         <div className="mt-3 flex flex-wrap gap-2"><span className="detail-chip"><Users /> {donation.servings} servings</span><span className="detail-chip text-[#b94725]"><Clock3 /> {donation.pickup}</span>{donation.dietary.map((item) => <span className="detail-chip" key={item}>{item}</span>)}</div>
                       </div>
-                      <Button onClick={() => acceptDonation(donation.id)} disabled={isAccepted} variant={isAccepted ? "secondary" : "outline"} className="h-10 rounded-full px-4">{isAccepted ? <><CheckCircle2 /> Accepted</> : <>View & accept <ArrowRight /></>}</Button>
+                      <Button onClick={() => acceptDonation(donation.id)} disabled={!canAccept || isAccepted} variant={isAccepted ? "secondary" : "outline"} className="h-10 rounded-full px-4">{isAccepted ? <><CheckCircle2 /> Accepted</> : canAccept ? <>View & accept <ArrowRight /></> : <>Beneficiaries only</>}</Button>
                     </article>
                   );
                 })}
@@ -276,7 +277,7 @@ export default function SharePlateApp() {
       </div>
 
       <nav className="fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-2xl border border-[#dfe4dc] bg-white/95 p-2 shadow-xl backdrop-blur lg:hidden" aria-label="Mobile navigation">
-        <NavItem icon={Home} label="Today" active /><NavItem icon={Search} label="Find" /><Button onClick={() => setDialogOpen(true)} size="icon" className="size-12 rounded-full bg-[#d7552d] text-white" aria-label="Offer surplus food"><Plus /></Button><NavItem icon={PackageCheck} label="Pickups" /><NavItem icon={Users} label="Feed" />
+        <NavItem icon={Home} label="Today" active href="/" /><NavItem icon={Search} label="Find" />{canDonate && <Button onClick={() => setDialogOpen(true)} size="icon" className="size-12 rounded-full bg-[#d7552d] text-white" aria-label="Offer surplus food"><Plus /></Button>}<NavItem icon={PackageCheck} label="Pickups" /><NavItem icon={Users} label="Feed" />
       </nav>
     </div>
   );

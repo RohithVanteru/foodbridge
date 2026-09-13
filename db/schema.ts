@@ -1,15 +1,20 @@
 import { sql } from "drizzle-orm";
-import { integer, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { index, integer, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const profiles = sqliteTable("profiles", {
   id: text("id").primaryKey(),
   email: text("email").notNull(),
   displayName: text("display_name"),
-  role: text("role", { enum: ["supplier", "beneficiary", "volunteer", "admin"] }).notNull(),
+  role: text("role", { enum: ["supplier", "beneficiary", "volunteer"] }).notNull(),
   organizationName: text("organization_name"),
+  phone: text("phone").notNull().default(""),
+  city: text("city").notNull().default(""),
+  address: text("address").notNull().default(""),
+  capacity: integer("capacity").notNull().default(0),
+  isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),
   verificationStatus: text("verification_status", { enum: ["pending", "verified", "rejected"] }).notNull().default("pending"),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+}, (table) => [index("idx_profiles_verification_status").on(table.verificationStatus)]);
 
 export const donations = sqliteTable("donations", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -26,7 +31,10 @@ export const donations = sqliteTable("donations", {
   safetyConfirmed: integer("safety_confirmed", { mode: "boolean" }).notNull().default(false),
   status: text("status", { enum: ["available", "claimed", "collected", "cancelled", "expired"] }).notNull().default("available"),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+}, (table) => [
+  index("idx_donations_status_pickup_by").on(table.status, table.pickupBy),
+  index("idx_donations_supplier_user_id").on(table.supplierUserId),
+]);
 
 export const claims = sqliteTable("claims", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -34,7 +42,10 @@ export const claims = sqliteTable("claims", {
   beneficiaryUserId: text("beneficiary_user_id").notNull(),
   status: text("status", { enum: ["accepted", "collected", "cancelled"] }).notNull().default("accepted"),
   acceptedAt: text("accepted_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-}, (table) => [uniqueIndex("claims_donation_unique").on(table.donationId)]);
+}, (table) => [
+  uniqueIndex("claims_donation_unique").on(table.donationId),
+  index("idx_claims_beneficiary_user_id").on(table.beneficiaryUserId),
+]);
 
 export const communityPosts = sqliteTable("community_posts", {
   id: integer("id").primaryKey({ autoIncrement: true }),
