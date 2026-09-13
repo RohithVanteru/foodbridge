@@ -1,0 +1,85 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "../vendor/shadcn-tailwind-4.13.0.css";
+
+:root {
+  --background: #f6f6f1;
+  --foreground: #17332f;
+  --card: #ffffff;
+  --card-foreground: #17332f;
+  --popover: #ffffff;
+  --popover-foreground: #17332f;
+  --primary: #153f3a;
+  --primary-foreground: #ffffff;
+  --secondary: #edf0eb;
+  --secondary-foreground: #17332f;
+  --muted: #edf0eb;
+  --muted-foreground: #60756f;
+  --accent: #fde8dc;
+  --accent-foreground: #a93d20;
+  --destructive: #c6372a;
+  --border: #dfe4dc;
+  --input: #cfd8cf;
+  --ring: #d7552d;
+  --radius: 0.9rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--background); }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif; }
+button, input, textarea { font: inherit; }
+button { cursor: pointer; }
+.font-display { font-family: "Avenir Next Condensed", "Arial Narrow", "Avenir Next", sans-serif; }
+.logo-mark { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border-radius: .8rem .8rem .8rem .2rem; background: #d7552d; color: white; transform: rotate(-4deg); }
+.logo-mark svg { transform: rotate(4deg); }
+.nav-item { display: flex; width: 100%; align-items: center; gap: .75rem; border: 0; border-radius: .75rem; background: transparent; padding: .7rem .8rem; color: #60756f; font-size: .9rem; font-weight: 650; transition: 160ms ease; }
+.nav-item:hover { background: #e9ede8; color: #17332f; }
+.nav-item-active { background: #e4ece7; color: #153f3a; }
+.eyebrow { color: #d7552d; font-size: .75rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+.stat-card { min-height: 10rem; border: 1px solid #dfe4dc; border-radius: 1.25rem; background: white; padding: 1.25rem; box-shadow: 0 8px 28px rgba(23, 51, 47, .045); }
+.stat-card-dark { border-color: #153f3a; background: #153f3a; }
+.stat-icon { display: grid; width: 2.35rem; height: 2.35rem; place-items: center; border-radius: .8rem; }
+.stat-icon svg { width: 1.1rem; height: 1.1rem; }
+.stat-value { margin-top: 1.2rem; font-family: "Avenir Next Condensed", "Arial Narrow", sans-serif; font-size: 1.8rem; font-weight: 800; letter-spacing: -.04em; }
+.donation-card { display: flex; align-items: center; gap: 1rem; border: 1px solid #dfe4dc; border-radius: 1.25rem; background: white; padding: 1.1rem; box-shadow: 0 8px 28px rgba(23, 51, 47, .035); transition: transform 160ms ease, box-shadow 160ms ease; }
+.donation-card:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(23, 51, 47, .075); }
+.detail-chip { display: inline-flex; align-items: center; gap: .35rem; border-radius: 999px; background: #f2f4ef; padding: .35rem .55rem; color: #60756f; font-size: .72rem; font-weight: 650; }
+.detail-chip svg { width: .8rem; height: .8rem; }
+.field { display: grid; gap: .45rem; color: #3d554f; font-size: .82rem; font-weight: 700; }
+
+@media (max-width: 700px) {
+  .donation-card { align-items: flex-start; flex-wrap: wrap; }
+  .donation-card > button { margin-left: 4rem; }
+  main { padding-bottom: 7rem !important; }
+  .nav-item { width: auto; flex-direction: column; gap: .15rem; padding: .4rem .55rem; font-size: .65rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
