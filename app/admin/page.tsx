@@ -2,7 +2,7 @@ import { count, desc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { requireChatGPTUser, chatGPTSignOutPath } from "@/app/chatgpt-auth";
 import { getDb } from "@/db";
-import { claims, donations, profiles } from "@/db/schema";
+import { auditEvents, claims, donations, profiles } from "@/db/schema";
 import AdminDashboard from "./admin-dashboard";
 
 export const dynamic = "force-dynamic";
@@ -12,16 +12,17 @@ export default async function AdminPage() {
   const db = getDb();
   const [profile] = await db.select().from(profiles).where(eq(profiles.id, user.userId)).limit(1);
   if (!profile) redirect("/onboarding");
-  if (!profile.isAdmin) redirect("/");
+  if (!profile.isAdmin) redirect("/app");
 
-  const [[usersTotal], [pendingTotal], [donationsTotal], [claimsTotal], pendingProfiles, recentDonations] = await Promise.all([
+  const [[usersTotal], [pendingTotal], [donationsTotal], [claimsTotal], pendingProfiles, recentDonations, recentAuditEvents] = await Promise.all([
     db.select({ value: count() }).from(profiles),
     db.select({ value: count() }).from(profiles).where(eq(profiles.verificationStatus, "pending")),
     db.select({ value: count() }).from(donations),
     db.select({ value: count() }).from(claims),
     db.select().from(profiles).where(eq(profiles.verificationStatus, "pending")).orderBy(desc(profiles.createdAt)).limit(25),
     db.select().from(donations).orderBy(desc(donations.createdAt)).limit(25),
+    db.select().from(auditEvents).orderBy(desc(auditEvents.createdAt)).limit(50),
   ]);
 
-  return <AdminDashboard user={{ displayName: user.displayName, email: user.email }} signOutPath={chatGPTSignOutPath("/")} metrics={{ users: usersTotal.value, pending: pendingTotal.value, donations: donationsTotal.value, claims: claimsTotal.value }} initialProfiles={pendingProfiles} initialDonations={recentDonations} />;
+  return <AdminDashboard user={{ displayName: user.displayName, email: user.email }} signOutPath={chatGPTSignOutPath("/")} metrics={{ users: usersTotal.value, pending: pendingTotal.value, donations: donationsTotal.value, claims: claimsTotal.value }} initialProfiles={pendingProfiles} initialDonations={recentDonations} initialAuditEvents={recentAuditEvents} />;
 }

@@ -11,6 +11,6 @@ export default async function OnboardingPage() {
   const user = await requireChatGPTUser("/onboarding");
   const db = getDb();
   const [profile] = await db.select().from(profiles).where(eq(profiles.id, user.userId)).limit(1);
-  if (profile) redirect("/");
+  if (profile) redirect("/app");
   return <OnboardingForm user={{ displayName: user.displayName, email: user.email }} />;
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SharePlate — Share food. Strengthen community.",
+  title: "FoodBridge — Share food. Strengthen community.",
   description: "Connect safe surplus food with nearby old-age homes and orphanages for same-day collection.",
   icons: {
     icon: "/favicon.svg",

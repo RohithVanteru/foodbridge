@@ -1,8 +1,8 @@
-# SharePlate product and delivery plan
+# FoodBridge product and delivery plan
 
 ## Product goal
 
-SharePlate coordinates same-day transfers of safe surplus food from verified suppliers to verified old-age homes and orphanages. The product must optimize for speed, food safety, accountability, and low-friction use on a phone.
+FoodBridge coordinates same-day transfers of safe surplus food from verified suppliers to verified old-age homes and orphanages. The product must optimize for speed, food safety, accountability, and low-friction use on a phone.
 
 ## MVP users and permissions
 
@@ -61,9 +61,9 @@ SharePlate coordinates same-day transfers of safe surplus food from verified sup
 - Next route handlers as the backend boundary
 - Cloudflare D1 + Drizzle for donations, claims, profiles, and community-post metadata
 - Platform-managed Sign in with ChatGPT, protected server-rendered routes, and server-side role authorization
-- First-account administrator bootstrap for the owner-private pilot
-- Protected admin console for organization verification and donation status operations
-- Static optimized image for the representative community post
+- Environment allowlisted administrators; no first-user privilege escalation
+- Protected admin console for organization verification, constrained donation transitions, and audit history
+- Private pickup details exposed only to matched participants and administrators
 
 This stack keeps the pilot inexpensive and deployable as one service. The API and database layer are intentionally small so they can be replaced without rewriting the UI.
 
@@ -85,7 +85,7 @@ PostgreSQL/PostGIS is the better long-term data backend because proximity search
 - `donations`: supplier, food, servings, allergens, timestamps, storage, coordinates, pickup deadline, status
 - `claims`: donation, beneficiary, status, acceptance and collection timestamps; unique active claim per donation
 - `pickup_events`: append-only status history and actor
-- `community_posts`: author, completed donation, caption, moderation state, image metadata
+- `community_posts`: author, completed donation, caption, moderation state, image metadata (planned UI)
 - `volunteer_assignments`: volunteer, organization, task, notes, status
 - `notifications`: channel, recipient, event, delivery status, attempts
 - `incidents`: donation, reporter, category, severity, resolution
@@ -104,7 +104,8 @@ PostgreSQL/PostGIS is the better long-term data backend because proximity search
 
 - `GET /api/donations` — active same-day donations, later filtered by coordinates and radius
 - `POST /api/donations` — create a safety-confirmed donation
-- `POST /api/donations/:id/accept` — atomically claim an available donation
+- `POST /api/donations/:id/accept` — reserve one available donation with a unique database constraint
+- `GET /api/health` — runtime and database readiness
 - Next: status transitions, organization onboarding, post creation, moderation, and notification callbacks
 
 ## Delivery sequence

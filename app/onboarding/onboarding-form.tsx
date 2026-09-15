@@ -34,7 +34,7 @@ export default function OnboardingForm({ user }: { user: { displayName: string; 
       }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      window.location.assign(result.firstAdministrator ? "/admin" : "/");
+      window.location.assign(result.administrator ? "/admin" : "/app");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Account setup failed. Please try again.");
       setSaving(false);
@@ -46,7 +46,7 @@ export default function OnboardingForm({ user }: { user: { displayName: string; 
       <div className="mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] border border-[#dfe4dc] bg-white shadow-[0_24px_80px_rgba(23,51,47,0.10)] lg:grid-cols-[0.82fr_1.18fr]">
         <section className="flex flex-col justify-between bg-[#153f3a] p-8 text-white sm:p-12">
           <div>
-            <div className="flex items-center gap-3"><span className="logo-mark"><Heart className="size-5 fill-current" /></span><span className="font-display text-2xl font-bold">Share<span className="text-[#f28a58]">Plate</span></span></div>
+            <div className="flex items-center gap-3"><span className="logo-mark"><Heart className="size-5 fill-current" /></span><span className="font-display text-2xl font-bold">Food<span className="text-[#f28a58]">Bridge</span></span></div>
             <p className="mt-16 text-xs font-bold uppercase tracking-[0.14em] text-[#f6b94b]">Secure account setup</p>
             <h1 className="font-display mt-3 text-4xl font-bold leading-tight tracking-[-0.04em] sm:text-5xl">Tell us how you’ll take part.</h1>
             <p className="mt-5 max-w-md text-base leading-7 text-white/70">Your ChatGPT sign-in protects your identity. Organization details are reviewed before food can be listed or claimed.</p>
@@ -54,7 +54,7 @@ export default function OnboardingForm({ user }: { user: { displayName: string; 
           <div className="mt-12 flex items-start gap-3 rounded-2xl bg-white/8 p-4"><UserRoundCheck className="mt-0.5 size-5 text-[#f6b94b]" /><div><p className="font-semibold">Signed in as {user.displayName}</p><p className="mt-1 text-sm text-white/55">{user.email}</p></div></div>
         </section>
         <form onSubmit={submit} className="p-7 sm:p-12">
-          <h2 className="font-display text-3xl font-bold tracking-[-0.04em]">Create your SharePlate profile</h2>
+          <h2 className="font-display text-3xl font-bold tracking-[-0.04em]">Create your FoodBridge profile</h2>
           <p className="mt-2 text-sm leading-6 text-[#60756f]">Choose one operating role. An administrator can update it later.</p>
           <RadioGroup value={role} onValueChange={setRole} className="mt-7 grid gap-3 sm:grid-cols-3">
             {roleOptions.map(({ value, title, description, icon: Icon }) => (

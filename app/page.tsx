@@ -1,17 +1,18 @@
-import SharePlateApp from "./shareplate-app";
-import { eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
-import { getDb } from "@/db";
-import { profiles } from "@/db/schema";
-import { chatGPTSignOutPath, requireChatGPTUser } from "./chatgpt-auth";
+import { ArrowRight, Building2, CheckCircle2, Heart, ShieldCheck, Truck, Users } from "lucide-react";
+import Link from "next/link";
+import { getChatGPTUser } from "./chatgpt-auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const user = await requireChatGPTUser("/");
-  const db = getDb();
-  const [profile] = await db.select().from(profiles).where(eq(profiles.id, user.userId)).limit(1);
-  if (!profile) redirect("/onboarding");
-
-  return <SharePlateApp user={{ displayName: user.displayName, email: user.email }} profile={{ role: profile.role, organizationName: profile.organizationName, verificationStatus: profile.verificationStatus, isAdmin: profile.isAdmin }} signOutPath={chatGPTSignOutPath("/")} />;
+  const user = await getChatGPTUser();
+  return (
+    <main className="min-h-screen bg-[#f6f6f1] text-[#17332f]">
+      <header className="border-b border-[#dfe4dc] bg-white/90 backdrop-blur"><div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5"><Link href="/" className="flex items-center gap-3"><span className="logo-mark"><Heart className="size-5 fill-current" /></span><span className="font-display text-2xl font-bold">Food<span className="text-[#d7552d]">Bridge</span></span></Link><nav className="flex items-center gap-2">{user ? <a href="/app" className="rounded-full bg-[#153f3a] px-5 py-2.5 text-sm font-bold text-white">Open dashboard</a> : <><a href="/login" className="rounded-full px-4 py-2.5 text-sm font-bold hover:bg-[#edf0eb]">Log in</a><a href="/signup" className="rounded-full bg-[#d7552d] px-5 py-2.5 text-sm font-bold text-white">Create account</a></>}</nav></div></header>
+      <section className="mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[1.1fr_.9fr] lg:items-center lg:py-24">
+        <div><p className="eyebrow">Same-day food rescue</p><h1 className="font-display mt-4 max-w-3xl text-[clamp(3.4rem,7vw,6.8rem)] font-bold leading-[.9] tracking-[-.07em]">Share food.<br /><span className="text-[#d7552d]">Spread love.</span></h1><p className="mt-7 max-w-xl text-lg leading-8 text-[#60756f]">Connect safe surplus food with verified old-age homes and orphanages nearby—before the day ends.</p><div className="mt-9 flex flex-wrap gap-3">{user ? <a href="/app" className="inline-flex items-center gap-2 rounded-full bg-[#d7552d] px-6 py-3.5 font-bold text-white">Go to your dashboard <ArrowRight className="size-4" /></a> : <><a href="/signup" className="inline-flex items-center gap-2 rounded-full bg-[#d7552d] px-6 py-3.5 font-bold text-white">Join FoodBridge <ArrowRight className="size-4" /></a><a href="/login" className="rounded-full border border-[#bcc8c1] bg-white px-6 py-3.5 font-bold">I already have an account</a></>}</div><p className="mt-4 flex items-center gap-2 text-sm text-[#78908b]"><ShieldCheck className="size-4" /> Secure identity and organization review</p></div>
+        <div className="overflow-hidden rounded-[2rem] bg-[#153f3a] p-7 text-white shadow-[0_30px_90px_rgba(21,63,58,.22)] sm:p-9"><p className="text-xs font-bold uppercase tracking-[.14em] text-[#f6b94b]">How it works</p><div className="mt-8 space-y-7">{[{ icon: Building2, title: "Suppliers offer surplus", text: "Add servings, safety notes, pickup time, and location." }, { icon: Users, title: "Verified homes accept", text: "Nearby beneficiaries reserve food based on real capacity." }, { icon: Truck, title: "Collect it today", text: "The beneficiary arranges pickup before the safe deadline." }].map(({ icon: Icon, title, text }, index) => <div key={title} className="flex gap-4"><span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/10"><Icon className="size-5 text-[#f6b94b]" /></span><div><p className="font-display text-lg font-bold">{index + 1}. {title}</p><p className="mt-1 text-sm leading-6 text-white/65">{text}</p></div></div>)}</div><div className="mt-9 flex items-center gap-3 rounded-2xl bg-white/8 p-4"><CheckCircle2 className="size-5 text-[#7fd0ae]" /><p className="text-sm font-semibold">Built for suppliers, beneficiaries, volunteers, and administrators.</p></div></div>
+      </section>
+    </main>
+  );
 }

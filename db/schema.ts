@@ -55,3 +55,16 @@ export const communityPosts = sqliteTable("community_posts", {
   imageKey: text("image_key"),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const auditEvents = sqliteTable("audit_events", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  actorUserId: text("actor_user_id").notNull(),
+  action: text("action").notNull(),
+  targetType: text("target_type").notNull(),
+  targetId: text("target_id").notNull(),
+  metadata: text("metadata").notNull().default("{}"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index("idx_audit_events_created_at").on(table.createdAt),
+  index("idx_audit_events_target").on(table.targetType, table.targetId),
+]);

@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { profiles } from "@/db/schema";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { noStoreJson } from "@/lib/server/security";
 
 export async function getCurrentIdentity() {
   const user = await getChatGPTUser();
@@ -13,8 +14,8 @@ export async function getCurrentIdentity() {
 
 export async function requireApiProfile() {
   const identity = await getCurrentIdentity();
-  if (!identity.user) return { error: Response.json({ error: "Sign in is required." }, { status: 401 }) } as const;
-  if (!identity.profile) return { error: Response.json({ error: "Complete your account setup first." }, { status: 403 }) } as const;
+  if (!identity.user) return { error: noStoreJson({ error: "Sign in is required." }, { status: 401 }) } as const;
+  if (!identity.profile) return { error: noStoreJson({ error: "Complete your account setup first." }, { status: 403 }) } as const;
   return { ...identity, error: null } as const;
 }
 

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import {
   ArrowRight,
   Bell,
@@ -11,7 +10,6 @@ import {
   Home,
   LogOut,
   MapPin,
-  MessageCircle,
   PackageCheck,
   Plus,
   Search,
@@ -41,17 +39,11 @@ type Role = "supplier" | "beneficiary" | "volunteer";
 type DonationItem = { id: number; supplier: string; initials: string; food: string; servings: number; distance: string; pickup: string; dietary: string[]; color: string };
 type WebMcpContext = { registerTool: (tool: { name: string; title: string; description: string; inputSchema: object; annotations: { readOnlyHint: boolean; untrustedContentHint: boolean }; execute: (input: unknown) => unknown }, options?: { signal: AbortSignal }) => void | Promise<void> };
 
-const initialDonations: DonationItem[] = [
-  { id: -1, supplier: "Saffron Table", initials: "ST", food: "Vegetable biryani & dal", servings: 42, distance: "1.2 km", pickup: "Pick up by 2:30 PM", dietary: ["Vegetarian", "No nuts"], color: "bg-[#d7552d]" },
-  { id: -2, supplier: "Orchid Banquets", initials: "OB", food: "Chapati, paneer & rice", servings: 65, distance: "2.8 km", pickup: "Pick up by 4:00 PM", dietary: ["Vegetarian"], color: "bg-[#153f3a]" },
-  { id: -3, supplier: "Campus Kitchen", initials: "CK", food: "Idli, sambar & fruit", servings: 28, distance: "3.4 km", pickup: "Pick up by 5:15 PM", dietary: ["Vegan", "Mild spice"], color: "bg-[#c78c20]" },
-];
-
 function Logo() {
   return (
     <div className="flex items-center gap-3">
       <span className="logo-mark" aria-hidden="true"><Heart className="size-5 fill-current" /></span>
-      <span className="font-display text-[1.35rem] font-bold tracking-[-0.04em]">Share<span className="text-[#d7552d]">Plate</span></span>
+      <span className="font-display text-[1.35rem] font-bold tracking-[-0.04em]">Food<span className="text-[#d7552d]">Bridge</span></span>
     </div>
   );
 }
@@ -61,7 +53,7 @@ function NavItem({ icon: Icon, label, active = false, href }: { icon: typeof Hom
   return href ? <a href={href} className={`nav-item ${active ? "nav-item-active" : ""}`}>{content}</a> : <button className={`nav-item ${active ? "nav-item-active" : ""}`}>{content}</button>;
 }
 
-export default function SharePlateApp({ user, profile, signOutPath }: { user: { displayName: string; email: string }; profile: { role: Role; organizationName: string | null; verificationStatus: "pending" | "verified" | "rejected"; isAdmin: boolean }; signOutPath: string }) {
+export default function FoodBridgeApp({ user, profile, signOutPath }: { user: { displayName: string; email: string }; profile: { role: Role; organizationName: string | null; city: string; verificationStatus: "pending" | "verified" | "rejected"; isAdmin: boolean }; signOutPath: string }) {
   const role = profile.role;
   const canDonate = role === "supplier" && profile.verificationStatus === "verified";
   const canAccept = role === "beneficiary" && profile.verificationStatus === "verified";
@@ -72,7 +64,9 @@ export default function SharePlateApp({ user, profile, signOutPath }: { user: { 
   const [created, setCreated] = useState(false);
   const [liveDonations, setLiveDonations] = useState<DonationItem[]>([]);
   const [actionError, setActionError] = useState("");
-  const donations = useMemo(() => (liveDonations.length ? liveDonations : initialDonations).filter((item) => `${item.supplier} ${item.food}`.toLowerCase().includes(search.toLowerCase())), [liveDonations, search]);
+  const donations = useMemo(() => liveDonations.filter((item) => `${item.supplier} ${item.food}`.toLowerCase().includes(search.toLowerCase())), [liveDonations, search]);
+  const totalServings = liveDonations.reduce((total, item) => total + item.servings, 0);
+  const todayLabel = new Date().toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" });
 
   useEffect(() => {
     fetch("/api/donations")
@@ -93,7 +87,7 @@ export default function SharePlateApp({ user, profile, signOutPath }: { user: { 
     const context = (document as Document & { modelContext?: WebMcpContext }).modelContext;
     if (!context?.registerTool) return;
     const lifecycle = new AbortController();
-    const source = liveDonations.length ? liveDonations : initialDonations;
+    const source = liveDonations;
     void Promise.resolve(context.registerTool({
       name: "search_available_food",
       title: "Search available food",
@@ -110,7 +104,7 @@ export default function SharePlateApp({ user, profile, signOutPath }: { user: { 
     void Promise.resolve(context.registerTool({
       name: "start_food_donation",
       title: "Start a food donation",
-      description: "Open the SharePlate form to prepare a same-day surplus food donation. This does not publish it.",
+      description: "Open the FoodBridge form to prepare a same-day surplus food donation. This does not publish it.",
       inputSchema: { type: "object", properties: {}, additionalProperties: false },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
       execute() {
@@ -168,10 +162,10 @@ export default function SharePlateApp({ user, profile, signOutPath }: { user: { 
         <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-5 lg:px-8">
           <Logo />
           <div className="hidden items-center gap-2 rounded-full border border-[#dfe4dc] bg-white px-4 py-2 md:flex">
-            <MapPin className="size-4 text-[#d7552d]" /><span className="text-sm font-semibold">Indiranagar, Bengaluru</span><ChevronRight className="size-4 text-[#78908b]" />
+            <MapPin className="size-4 text-[#d7552d]" /><span className="text-sm font-semibold">{profile.city}</span><ChevronRight className="size-4 text-[#78908b]" />
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" aria-label="Notifications" className="relative rounded-full"><Bell className="size-5" /><span className="absolute right-2 top-2 size-2 rounded-full bg-[#d7552d] ring-2 ring-[#f6f6f1]" /></Button>
+            <Button variant="ghost" size="icon" aria-label="Notifications" className="rounded-full"><Bell className="size-5" /></Button>
             <div className="hidden text-right sm:block"><p className="max-w-40 truncate text-sm font-bold">{user.displayName}</p><p className="max-w-40 truncate text-xs text-[#78908b]">{profile.organizationName ?? "Individual volunteer"}</p></div>
             <span className="flex size-10 items-center justify-center rounded-full bg-[#153f3a] text-sm font-bold text-white" aria-label={`Signed in as ${user.displayName}`}>{initials}</span>
             <a href={signOutPath} className="flex size-9 items-center justify-center rounded-full text-[#60756f] hover:bg-[#e8ece6]" aria-label="Sign out"><LogOut className="size-4" /></a>
@@ -182,7 +176,7 @@ export default function SharePlateApp({ user, profile, signOutPath }: { user: { 
       <div className="mx-auto grid max-w-[1440px] grid-cols-1 lg:grid-cols-[232px_minmax(0,1fr)]">
         <aside className="hidden min-h-[calc(100vh-72px)] border-r border-[#dfe4dc] px-5 py-8 lg:block">
           <nav className="space-y-1" aria-label="Main navigation">
-            <NavItem icon={Home} label="Today" active href="/" /><NavItem icon={Search} label="Find food" /><NavItem icon={PackageCheck} label="My pickups" /><NavItem icon={Users} label="Community" />{profile.isAdmin && <NavItem icon={ShieldCheck} label="Admin console" href="/admin" />}
+            <NavItem icon={Home} label="Today" active href="/app" /><NavItem icon={Search} label="Find food" href="/app#available-food" /><NavItem icon={PackageCheck} label="My pickups" href="/pickups" /><NavItem icon={Users} label="Community" href="/app#community" />{profile.isAdmin && <NavItem icon={ShieldCheck} label="Admin console" href="/admin" />}
           </nav>
           <div className="mt-8 border-t border-[#dfe4dc] pt-6">
             <p className="mb-3 px-3 text-xs font-bold uppercase tracking-[0.12em] text-[#78908b]">Your account</p>
@@ -198,7 +192,7 @@ export default function SharePlateApp({ user, profile, signOutPath }: { user: { 
         <main className="min-w-0 px-5 py-7 sm:px-8 lg:px-10 lg:py-9">
           <section className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="eyebrow">Sunday, 13 September</p>
+              <p className="eyebrow">{todayLabel}</p>
               <h1 className="font-display mt-2 max-w-2xl text-[clamp(2rem,4vw,3.6rem)] font-bold leading-[0.98] tracking-[-0.055em]">Good food should<br />never go to waste.</h1>
               <p className="mt-4 max-w-xl text-base leading-7 text-[#60756f]">
                 {role === "beneficiary" && "Three safe, same-day donations are available near your home."}
@@ -210,7 +204,7 @@ export default function SharePlateApp({ user, profile, signOutPath }: { user: { 
               {role === "supplier" && <DialogTrigger asChild><Button disabled={!canDonate} size="lg" className="h-12 self-start rounded-full bg-[#d7552d] px-6 text-base text-white shadow-[0_10px_30px_rgba(215,85,45,0.22)] hover:bg-[#be4522]"><Plus className="size-5" /> {canDonate ? "Offer surplus food" : "Verification pending"}</Button></DialogTrigger>}
               <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl border-0 p-0 sm:max-w-xl">
                 <form onSubmit={submitDonation}>
-                  <DialogHeader className="border-b border-[#e4e8e1] px-7 py-6"><DialogTitle className="font-display text-2xl">Offer food for today</DialogTitle><DialogDescription>Nearby verified homes will be notified immediately.</DialogDescription></DialogHeader>
+                  <DialogHeader className="border-b border-[#e4e8e1] px-7 py-6"><DialogTitle className="font-display text-2xl">Offer food for today</DialogTitle><DialogDescription>Your listing becomes visible to verified homes immediately.</DialogDescription></DialogHeader>
                   <div className="grid gap-5 px-7 py-6 sm:grid-cols-2">
                     <label className="field sm:col-span-2">Supplier or organization<Input required name="supplierName" defaultValue={profile.organizationName ?? ""} placeholder="e.g. Saffron Table" /></label>
                     <label className="field sm:col-span-2">Food description<Input required name="foodDescription" placeholder="e.g. Vegetable biryani and dal" /></label>
@@ -221,23 +215,23 @@ export default function SharePlateApp({ user, profile, signOutPath }: { user: { 
                     <label className="flex items-start gap-3 rounded-xl bg-[#f2f4ef] p-4 text-sm leading-5 text-[#506761] sm:col-span-2"><input required name="safetyConfirmed" type="checkbox" className="mt-1 accent-[#d7552d]" /><span>I confirm this food was prepared and stored safely and will be collected today.</span></label>
                     {actionError && <p className="text-sm font-semibold text-[#b33c27] sm:col-span-2" role="alert">{actionError}</p>}
                   </div>
-                  <DialogFooter className="border-t border-[#e4e8e1] px-7 py-5"><DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose><Button type="submit" className="bg-[#d7552d] text-white hover:bg-[#be4522]">Notify nearby homes</Button></DialogFooter>
+                  <DialogFooter className="border-t border-[#e4e8e1] px-7 py-5"><DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose><Button type="submit" className="bg-[#d7552d] text-white hover:bg-[#be4522]">Publish donation</Button></DialogFooter>
                 </form>
               </DialogContent>
             </Dialog>
           </section>
 
-          {created && <div className="mt-6 flex items-center gap-3 rounded-2xl border border-[#a9c9bb] bg-[#e5f2eb] px-4 py-3 text-sm font-semibold text-[#1c5f4d]" role="status"><CheckCircle2 className="size-5" /> Your donation is live. Nearby verified homes have been notified.</div>}
+          {created && <div className="mt-6 flex items-center gap-3 rounded-2xl border border-[#a9c9bb] bg-[#e5f2eb] px-4 py-3 text-sm font-semibold text-[#1c5f4d]" role="status"><CheckCircle2 className="size-5" /> Your donation is live and visible to verified homes.</div>}
           {actionError && !dialogOpen && <div className="mt-6 rounded-2xl border border-[#e4b7a9] bg-[#fff0e9] px-4 py-3 text-sm font-semibold text-[#9e3922]" role="alert">{actionError}</div>}
 
           <section className="mt-8 grid gap-4 sm:grid-cols-3">
-            <article className="stat-card stat-card-dark text-white"><span className="stat-icon bg-white/10"><Utensils /></span><p className="stat-value">135</p><p className="text-sm text-white/65">servings available nearby</p></article>
-            <article className="stat-card"><span className="stat-icon bg-[#fde8dc] text-[#d7552d]"><Clock3 /></span><p className="stat-value">3h 40m</p><p className="text-sm text-[#6b7d78]">until the next pickup closes</p></article>
-            <article className="stat-card"><span className="stat-icon bg-[#fff0cb] text-[#9a6700]"><Truck /></span><p className="stat-value">2</p><p className="text-sm text-[#6b7d78]">pickups in progress today</p></article>
+            <article className="stat-card stat-card-dark text-white"><span className="stat-icon bg-white/10"><Utensils /></span><p className="stat-value">{totalServings}</p><p className="text-sm text-white/65">servings available nearby</p></article>
+            <article className="stat-card"><span className="stat-icon bg-[#fde8dc] text-[#d7552d]"><Clock3 /></span><p className="stat-value">{liveDonations.length}</p><p className="text-sm text-[#6b7d78]">active same-day donations</p></article>
+            <article className="stat-card"><span className="stat-icon bg-[#fff0cb] text-[#9a6700]"><Truck /></span><p className="stat-value">{accepted.length}</p><p className="text-sm text-[#6b7d78]">pickups accepted this session</p></article>
           </section>
 
           <div className="mt-10 grid gap-8 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
-            <section>
+            <section id="available-food">
               <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div><h2 className="font-display text-2xl font-bold tracking-[-0.035em]">Available near you</h2><p className="mt-1 text-sm text-[#6b7d78]">Ready for collection today</p></div>
                 <label className="relative block"><span className="sr-only">Search food or supplier</span><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#78908b]" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search food or supplier" className="h-10 rounded-full bg-white pl-9 sm:w-64" /></label>
@@ -261,23 +255,16 @@ export default function SharePlateApp({ user, profile, signOutPath }: { user: { 
               </div>
             </section>
 
-            <aside>
+            <aside id="community">
               <div className="mb-5 flex items-center justify-between"><div><h2 className="font-display text-2xl font-bold tracking-[-0.035em]">Community</h2><p className="mt-1 text-sm text-[#6b7d78]">Impact, shared openly</p></div><button className="text-sm font-bold text-[#d7552d]">View feed</button></div>
-              <article className="overflow-hidden rounded-3xl border border-[#dfe4dc] bg-white shadow-[0_12px_36px_rgba(23,51,47,0.06)]">
-                <div className="relative aspect-[4/3] overflow-hidden bg-[#dfe4dc]"><Image src="/community-handoff.png" alt="Fresh, sealed meals being handed to an NGO coordinator" fill sizes="(min-width: 1280px) 30vw, 100vw" className="object-cover" priority /><span className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-white/92 px-3 py-1.5 text-xs font-bold shadow-sm backdrop-blur"><Sparkles className="size-3.5 text-[#d7552d]" /> Completed today</span></div>
-                <div className="p-5">
-                  <div className="flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-full bg-[#f0c35b] font-bold text-[#17332f]">SH</span><div><p className="font-bold">Sunrise Children’s Home</p><p className="text-xs text-[#78908b]">45 minutes ago</p></div></div>
-                  <p className="mt-4 text-[0.95rem] leading-6 text-[#435b55]">Forty warm meals arrived right on time. Thank you to Saffron Table and volunteer Meera for making today’s lunch possible.</p>
-                  <div className="mt-5 flex items-center gap-5 border-t border-[#edf0eb] pt-4 text-sm font-semibold text-[#60756f]"><button className="flex items-center gap-2"><Heart className="size-4" /> 38</button><button className="flex items-center gap-2"><MessageCircle className="size-4" /> 6</button><span className="ml-auto text-xs text-[#78908b]">40 meals delivered</span></div>
-                </div>
-              </article>
+              <article className="rounded-3xl border border-dashed border-[#cbd4cb] bg-white p-8 text-center"><Sparkles className="mx-auto size-8 text-[#d7552d]" /><p className="font-display mt-4 text-xl font-bold">No community updates yet</p><p className="mt-2 text-sm leading-6 text-[#60756f]">Completed pickups can be shared here after photo consent and moderation are enabled.</p></article>
             </aside>
           </div>
         </main>
       </div>
 
       <nav className="fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-2xl border border-[#dfe4dc] bg-white/95 p-2 shadow-xl backdrop-blur lg:hidden" aria-label="Mobile navigation">
-        <NavItem icon={Home} label="Today" active href="/" /><NavItem icon={Search} label="Find" />{canDonate && <Button onClick={() => setDialogOpen(true)} size="icon" className="size-12 rounded-full bg-[#d7552d] text-white" aria-label="Offer surplus food"><Plus /></Button>}<NavItem icon={PackageCheck} label="Pickups" /><NavItem icon={Users} label="Feed" />
+        <NavItem icon={Home} label="Today" active href="/app" /><NavItem icon={Search} label="Find" href="/app#available-food" />{canDonate && <Button onClick={() => setDialogOpen(true)} size="icon" className="size-12 rounded-full bg-[#d7552d] text-white" aria-label="Offer surplus food"><Plus /></Button>}<NavItem icon={PackageCheck} label="Pickups" href="/pickups" /><NavItem icon={Users} label="Feed" href="/app#community" />
       </nav>
     </div>
   );
