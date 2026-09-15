@@ -7,8 +7,10 @@ FoodBridge is a full-stack prototype for coordinating same-day surplus-food dona
 - Responsive role-aware dashboard
 - Landing, login, signup, onboarding, sign-out, and protected account flows
 - Platform-managed authentication with Google-linked ChatGPT accounts
+- Signed-in login redirects, verification-state gating, and a dedicated account-status screen
 - Guided onboarding for suppliers, beneficiaries, and volunteers
-- Environment allowlisted administrators and a protected admin console
+- Environment allowlisted administrators revalidated on every admin request
+- Separate admin monitoring pages for users, donations, pickups, audit history, and system health
 - Organization verification and donation status administration
 - Nearby donation search
 - Supplier donation form with required same-day safety confirmation

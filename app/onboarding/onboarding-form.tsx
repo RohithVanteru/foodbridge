@@ -34,7 +34,7 @@ export default function OnboardingForm({ user }: { user: { displayName: string; 
       }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      window.location.assign(result.administrator ? "/admin" : "/app");
+      window.location.assign(result.administrator ? "/admin" : "/account");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Account setup failed. Please try again.");
       setSaving(false);

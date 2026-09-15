@@ -14,6 +14,7 @@ export default async function PickupsPage() {
   const db = getDb();
   const [profile] = await db.select().from(profiles).where(eq(profiles.id, user.userId)).limit(1);
   if (!profile) redirect("/onboarding");
+  if (profile.verificationStatus !== "verified") redirect("/account");
 
   let pickups: Pickup[] = [];
   if (profile.role === "supplier") {

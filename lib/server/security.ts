@@ -1,10 +1,19 @@
 import { env } from "cloudflare:workers";
 
 export function isConfiguredAdministrator(email: string, requestUrl: string) {
-  const host = new URL(requestUrl).hostname;
+  let host = "";
+  try {
+    host = new URL(requestUrl).hostname;
+  } catch {
+    return false;
+  }
   if (["localhost", "127.0.0.1"].includes(host) && email === "seedy@sites.test") return true;
   const allowed = (env.FOODBRIDGE_ADMIN_EMAILS ?? "").split(",").map((value) => value.trim().toLowerCase()).filter(Boolean);
   return allowed.includes(email.trim().toLowerCase());
+}
+
+export function canAdminister(profile: { isAdmin: boolean; verificationStatus: string }, email: string, requestUrl: string) {
+  return profile.isAdmin && profile.verificationStatus === "verified" && isConfiguredAdministrator(email, requestUrl);
 }
 
 export function validateWriteRequest(request: Request) {

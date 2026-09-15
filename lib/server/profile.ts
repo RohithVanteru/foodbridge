@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { profiles } from "@/db/schema";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
-import { noStoreJson } from "@/lib/server/security";
+import { canAdminister, noStoreJson } from "@/lib/server/security";
 
 export async function getCurrentIdentity() {
   const user = await getChatGPTUser();
@@ -17,6 +17,15 @@ export async function requireApiProfile() {
   if (!identity.user) return { error: noStoreJson({ error: "Sign in is required." }, { status: 401 }) } as const;
   if (!identity.profile) return { error: noStoreJson({ error: "Complete your account setup first." }, { status: 403 }) } as const;
   return { ...identity, error: null } as const;
+}
+
+export async function requireApiAdministrator(request: Request) {
+  const identity = await requireApiProfile();
+  if (identity.error) return identity;
+  if (!canAdminister(identity.profile, identity.user.email, request.url)) {
+    return { error: noStoreJson({ error: "Administrator access is required." }, { status: 403 }) } as const;
+  }
+  return identity;
 }
 
 export function canUseRole(profile: { role: string; verificationStatus: string }, role: "supplier" | "beneficiary") {

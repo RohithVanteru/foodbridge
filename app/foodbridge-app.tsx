@@ -167,7 +167,7 @@ export default function FoodBridgeApp({ user, profile, signOutPath }: { user: { 
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" aria-label="Notifications" className="rounded-full"><Bell className="size-5" /></Button>
             <div className="hidden text-right sm:block"><p className="max-w-40 truncate text-sm font-bold">{user.displayName}</p><p className="max-w-40 truncate text-xs text-[#78908b]">{profile.organizationName ?? "Individual volunteer"}</p></div>
-            <span className="flex size-10 items-center justify-center rounded-full bg-[#153f3a] text-sm font-bold text-white" aria-label={`Signed in as ${user.displayName}`}>{initials}</span>
+            <a href="/account" className="flex size-10 items-center justify-center rounded-full bg-[#153f3a] text-sm font-bold text-white" aria-label={`View account for ${user.displayName}`}>{initials}</a>
             <a href={signOutPath} className="flex size-9 items-center justify-center rounded-full text-[#60756f] hover:bg-[#e8ece6]" aria-label="Sign out"><LogOut className="size-4" /></a>
           </div>
         </div>

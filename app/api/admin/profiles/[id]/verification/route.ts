@@ -1,13 +1,12 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { auditEvents, profiles } from "@/db/schema";
-import { requireApiProfile } from "@/lib/server/profile";
+import { requireApiAdministrator } from "@/lib/server/profile";
 import { noStoreJson, validateWriteRequest } from "@/lib/server/security";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
-  const identity = await requireApiProfile();
+  const identity = await requireApiAdministrator(request);
   if (identity.error) return identity.error;
-  if (!identity.profile.isAdmin) return noStoreJson({ error: "Administrator access is required." }, { status: 403 });
   const invalidRequest = validateWriteRequest(request);
   if (invalidRequest) return invalidRequest;
   const payload = await request.json() as { status?: string };
