@@ -53,7 +53,7 @@ function NavItem({ icon: Icon, label, active = false, href }: { icon: typeof Hom
   return href ? <a href={href} className={`nav-item ${active ? "nav-item-active" : ""}`}>{content}</a> : <button className={`nav-item ${active ? "nav-item-active" : ""}`}>{content}</button>;
 }
 
-export default function FoodBridgeApp({ user, profile, signOutPath }: { user: { displayName: string; email: string }; profile: { role: Role; organizationName: string | null; city: string; verificationStatus: "pending" | "verified" | "rejected"; isAdmin: boolean }; signOutPath: string }) {
+export default function FoodBridgeApp({ user, profile, signOutPath, todayLabel }: { user: { displayName: string; email: string }; profile: { role: Role; organizationName: string | null; city: string; verificationStatus: "pending" | "verified" | "rejected"; isAdmin: boolean }; signOutPath: string; todayLabel: string }) {
   const role = profile.role;
   const canDonate = role === "supplier" && profile.verificationStatus === "verified";
   const canAccept = role === "beneficiary" && profile.verificationStatus === "verified";
@@ -66,7 +66,6 @@ export default function FoodBridgeApp({ user, profile, signOutPath }: { user: { 
   const [actionError, setActionError] = useState("");
   const donations = useMemo(() => liveDonations.filter((item) => `${item.supplier} ${item.food}`.toLowerCase().includes(search.toLowerCase())), [liveDonations, search]);
   const totalServings = liveDonations.reduce((total, item) => total + item.servings, 0);
-  const todayLabel = new Date().toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" });
 
   useEffect(() => {
     fetch("/api/donations")

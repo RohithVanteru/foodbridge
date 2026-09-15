@@ -16,5 +16,6 @@ export default async function DashboardPage() {
   if (!profile) redirect("/onboarding");
   if (profile.verificationStatus !== "verified") redirect("/account");
   const isAdmin = canAdminister(profile, user.email, await currentRequestUrl("/app"));
-  return <FoodBridgeApp user={{ displayName: user.displayName, email: user.email }} profile={{ role: profile.role, organizationName: profile.organizationName, city: profile.city, verificationStatus: profile.verificationStatus, isAdmin }} signOutPath={chatGPTSignOutPath("/")} />;
+  const todayLabel = new Intl.DateTimeFormat("en-US", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Kolkata" }).format(new Date());
+  return <FoodBridgeApp user={{ displayName: user.displayName, email: user.email }} profile={{ role: profile.role, organizationName: profile.organizationName, city: profile.city, verificationStatus: profile.verificationStatus, isAdmin }} signOutPath={chatGPTSignOutPath("/")} todayLabel={todayLabel} />;
 }
