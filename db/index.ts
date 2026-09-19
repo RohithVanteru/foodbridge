@@ -1,13 +1,9 @@
-import { env } from "cloudflare:workers";
-import { drizzle } from "drizzle-orm/d1";
+import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
 
-export function getDb() {
-  if (!env.DB) {
-    throw new Error(
-      "Cloudflare D1 binding `DB` is unavailable. Set the `d1` field in .openai/hosting.json to `DB` or let your control plane inject the real binding values before using the database."
-    );
-  }
-
-  return drizzle(env.DB, { schema });
-}
+const globalDb = globalThis as unknown as { foodbridgePool?: Pool };
+export const pool = globalDb.foodbridgePool ?? new Pool({ connectionString: process.env.DATABASE_URL, max: 10, connectionTimeoutMillis: 5000, idleTimeoutMillis: 30000 });
+if (process.env.NODE_ENV !== "production") globalDb.foodbridgePool = pool;
+const db = drizzle(pool, { schema });
+export function getDb() { return db; }

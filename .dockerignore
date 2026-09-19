@@ -1,0 +1,16 @@
+node_modules
+.git
+.next
+.env
+.env.*
+.openai
+.wrangler
+.sites-runtime
+dist
+build
+.vinext
+drizzle
+examples
+data
+outputs
+*.tar.gz

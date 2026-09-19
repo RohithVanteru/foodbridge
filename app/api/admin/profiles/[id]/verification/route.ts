@@ -1,29 +1,25 @@
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { getDb } from "@/db";
-import { auditEvents, profiles } from "@/db/schema";
+import { auditEvents, profiles, notifications } from "@/db/schema";
 import { requireApiAdministrator } from "@/lib/server/profile";
+import { readBody } from "@/lib/server/body";
 import { noStoreJson, validateWriteRequest } from "@/lib/server/security";
-
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
-  const identity = await requireApiAdministrator(request);
-  if (identity.error) return identity.error;
-  const invalidRequest = validateWriteRequest(request);
-  if (invalidRequest) return invalidRequest;
-  const payload = await request.json() as { status?: string };
-  if (payload.status !== "verified" && payload.status !== "rejected") return noStoreJson({ error: "Invalid verification status." }, { status: 400 });
-  const { id } = await context.params;
-  if (id === identity.user.userId) return noStoreJson({ error: "Administrators cannot change their own verification." }, { status: 400 });
+  const identity = await requireApiAdministrator(request); if (identity.error) return identity.error;
+  const invalid = validateWriteRequest(request); if (invalid) return invalid;
   try {
-    const db = getDb();
-    const [target] = await db.select().from(profiles).where(eq(profiles.id, id)).limit(1);
-    if (!target) return noStoreJson({ error: "Account not found." }, { status: 404 });
-    if (target.isAdmin) return noStoreJson({ error: "Administrator accounts cannot be changed here." }, { status: 400 });
-    if (target.verificationStatus !== "pending") return noStoreJson({ error: "Only pending accounts can be reviewed." }, { status: 409 });
-    const [profile] = await db.update(profiles).set({ verificationStatus: payload.status }).where(eq(profiles.id, id)).returning();
-    await db.insert(auditEvents).values({ actorUserId: identity.user.userId, action: `profile.${payload.status}`, targetType: "profile", targetId: id, metadata: JSON.stringify({ previousStatus: target.verificationStatus }) });
+    const { status } = await readBody(request, z.object({ status: z.enum(["verified", "rejected"]) }));
+    const { id } = await context.params;
+    if (id === identity.user.userId) return noStoreJson({ error: "Cannot change your own verification." }, { status: 400 });
+    const profile = await getDb().transaction(async tx => {
+      const [target] = await tx.select().from(profiles).where(eq(profiles.id, id)).for("update");
+      if (!target || target.isAdmin) throw new Error("Account cannot be changed.");
+      const [updated] = await tx.update(profiles).set({ verificationStatus: status }).where(eq(profiles.id, id)).returning();
+      await tx.insert(auditEvents).values({ actorUserId: identity.user.userId, action: "profile." + status, targetType: "profile", targetId: id, metadata: JSON.stringify({ previousStatus: target.verificationStatus }) });
+      await tx.insert(notifications).values({ userId: id, title: "Account review updated", body: "Your account is " + status + ".", href: "/account" });
+      return updated;
+    });
     return noStoreJson({ profile });
-  } catch (error) {
-    console.error("Profile verification failed", error);
-    return noStoreJson({ error: "Verification update failed." }, { status: 503 });
-  }
+  } catch { return noStoreJson({ error: "Invalid account review request." }, { status: 400 }); }
 }

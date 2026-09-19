@@ -1,11 +1,11 @@
 import { ArrowRight, Building2, CheckCircle2, Heart, ShieldCheck, Truck, Users } from "lucide-react";
 import Link from "next/link";
-import { getChatGPTUser } from "./chatgpt-auth";
+import { getUser } from "@/lib/server/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const user = await getChatGPTUser();
+  const user = await getUser();
   return (
     <main className="min-h-screen bg-[#f6f6f1] text-[#17332f]">
       <header className="border-b border-[#dfe4dc] bg-white/90 backdrop-blur"><div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5"><Link href="/" className="flex items-center gap-3"><span className="logo-mark"><Heart className="size-5 fill-current" /></span><span className="font-display text-2xl font-bold">Food<span className="text-[#d7552d]">Bridge</span></span></Link><nav className="flex items-center gap-2">{user ? <a href="/app" className="rounded-full bg-[#153f3a] px-5 py-2.5 text-sm font-bold text-white">Open dashboard</a> : <><a href="/login" className="rounded-full px-4 py-2.5 text-sm font-bold hover:bg-[#edf0eb]">Log in</a><a href="/signup" className="rounded-full bg-[#d7552d] px-5 py-2.5 text-sm font-bold text-white">Create account</a></>}</nav></div></header>

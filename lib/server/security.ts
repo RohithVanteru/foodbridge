@@ -1,5 +1,3 @@
-import { env } from "cloudflare:workers";
-
 export function isConfiguredAdministrator(email: string, requestUrl: string) {
   let host = "";
   try {
@@ -7,8 +5,8 @@ export function isConfiguredAdministrator(email: string, requestUrl: string) {
   } catch {
     return false;
   }
-  if (["localhost", "127.0.0.1"].includes(host) && email === "seedy@sites.test") return true;
-  const allowed = (env.FOODBRIDGE_ADMIN_EMAILS ?? "").split(",").map((value) => value.trim().toLowerCase()).filter(Boolean);
+  if (!host) return false;
+  const allowed = (process.env.FOODBRIDGE_ADMIN_EMAILS ?? "").split(",").map((value) => value.trim().toLowerCase()).filter(Boolean);
   return allowed.includes(email.trim().toLowerCase());
 }
 
@@ -22,13 +20,13 @@ export function validateWriteRequest(request: Request) {
   const length = Number(request.headers.get("content-length") ?? 0);
   if (length > 16_384) return noStoreJson({ error: "Request is too large." }, { status: 413 });
   const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) return noStoreJson({ error: "Cross-site request rejected." }, { status: 403 });
+  if (origin && origin !== new URL(process.env.BETTER_AUTH_URL ?? request.url).origin) return noStoreJson({ error: "Cross-site request rejected." }, { status: 403 });
   return null;
 }
 
 export function validateSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) {
+  if (origin && origin !== new URL(process.env.BETTER_AUTH_URL ?? request.url).origin) {
     return noStoreJson({ error: "Cross-site request rejected." }, { status: 403 });
   }
   return null;

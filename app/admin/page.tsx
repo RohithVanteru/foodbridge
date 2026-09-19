@@ -1,3 +1,4 @@
+import { requireAdministrator } from "@/lib/server/admin";
 import { count, desc, eq } from "drizzle-orm";
 import { ArrowRight, Clock3, PackageCheck, ScrollText, Store, Users } from "lucide-react";
 import Link from "next/link";
@@ -7,6 +8,7 @@ import { auditEvents, claims, donations, profiles } from "@/db/schema";
 export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
+  await requireAdministrator("/admin");
   const db = getDb();
   const [[usersTotal], [pendingTotal], [donationsTotal], [claimsTotal], recentEvents] = await Promise.all([
     db.select({ value: count() }).from(profiles),

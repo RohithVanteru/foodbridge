@@ -20,14 +20,14 @@ export function VerificationActions({ id, onComplete }: { id: string; onComplete
   return <div className="flex flex-wrap items-center justify-end gap-2"><Button disabled={busy || Boolean(message)} onClick={() => update("rejected")} size="sm" variant="outline"><X /> Reject</Button><Button disabled={busy || Boolean(message)} onClick={() => update("verified")} size="sm" className="bg-[#26705d] text-white"><Check /> Verify</Button>{message && <span className="text-xs font-bold text-[#60756f]">{message}</span>}</div>;
 }
 
-export function DonationActions({ id, status }: { id: number; status: string }) {
+export function DonationActions({ id, status, participant = false }: { id: number; status: string; participant?: boolean }) {
   const [currentStatus, setCurrentStatus] = useState(status);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   async function update(next: "collected" | "cancelled") {
     setBusy(true); setMessage("");
     try {
-      const response = await fetch(`/api/admin/donations/${id}/status`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ status: next }) });
+      const response = await fetch(`/api/${participant ? "" : "admin/"}donations/${id}/status`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ status: next }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
       setCurrentStatus(next);

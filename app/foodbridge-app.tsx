@@ -74,12 +74,12 @@ export default function FoodBridgeApp({ user, profile, signOutPath, todayLabel }
         const supplier = String(row.supplierName);
         return {
           id: Number(row.id), supplier, initials: supplier.split(/\s+/).map((word) => word[0]).join("").slice(0, 2).toUpperCase(),
-          food: String(row.foodDescription), servings: Number(row.servings), distance: "Nearby",
+          food: String(row.foodDescription), servings: Number(row.servings), distance: row.distanceKm == null ? "Same city (coordinates unavailable)" : `${row.distanceKm} km away`,
           pickup: `Pick up by ${new Date(String(row.pickupBy)).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`,
           dietary: Array.isArray(row.dietaryNotes) ? row.dietaryNotes.map(String) : [], color: "bg-[#d7552d]",
         };
       })))
-      .catch(() => undefined);
+      .catch(() => setActionError("Could not load available food. Please refresh."));
   }, []);
 
   useEffect(() => {
@@ -164,7 +164,7 @@ export default function FoodBridgeApp({ user, profile, signOutPath, todayLabel }
             <MapPin className="size-4 text-[#d7552d]" /><span className="text-sm font-semibold">{profile.city}</span><ChevronRight className="size-4 text-[#78908b]" />
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" aria-label="Notifications" className="rounded-full"><Bell className="size-5" /></Button>
+            <a href="/notifications" aria-label="Notifications" className="rounded-full p-2"><Bell className="size-5" /></a>
             <div className="hidden text-right sm:block"><p className="max-w-40 truncate text-sm font-bold">{user.displayName}</p><p className="max-w-40 truncate text-xs text-[#78908b]">{profile.organizationName ?? "Individual volunteer"}</p></div>
             <a href="/account" className="flex size-10 items-center justify-center rounded-full bg-[#153f3a] text-sm font-bold text-white" aria-label={`View account for ${user.displayName}`}>{initials}</a>
             <a href={signOutPath} className="flex size-9 items-center justify-center rounded-full text-[#60756f] hover:bg-[#e8ece6]" aria-label="Sign out"><LogOut className="size-4" /></a>
@@ -175,7 +175,7 @@ export default function FoodBridgeApp({ user, profile, signOutPath, todayLabel }
       <div className="mx-auto grid max-w-[1440px] grid-cols-1 lg:grid-cols-[232px_minmax(0,1fr)]">
         <aside className="hidden min-h-[calc(100vh-72px)] border-r border-[#dfe4dc] px-5 py-8 lg:block">
           <nav className="space-y-1" aria-label="Main navigation">
-            <NavItem icon={Home} label="Today" active href="/app" /><NavItem icon={Search} label="Find food" href="/app#available-food" /><NavItem icon={PackageCheck} label="My pickups" href="/pickups" /><NavItem icon={Users} label="Community" href="/app#community" />{profile.isAdmin && <NavItem icon={ShieldCheck} label="Admin console" href="/admin" />}
+            <NavItem icon={Home} label="Today" active href="/app" /><NavItem icon={Search} label="Find food" href="/app#available-food" /><NavItem icon={PackageCheck} label="My pickups" href="/pickups" /><NavItem icon={Users} label="Community" href="/community" />{profile.isAdmin && <NavItem icon={ShieldCheck} label="Admin console" href="/admin" />}
           </nav>
           <div className="mt-8 border-t border-[#dfe4dc] pt-6">
             <p className="mb-3 px-3 text-xs font-bold uppercase tracking-[0.12em] text-[#78908b]">Your account</p>
@@ -184,7 +184,7 @@ export default function FoodBridgeApp({ user, profile, signOutPath, todayLabel }
           <div className="mt-8 rounded-2xl bg-[#153f3a] p-4 text-white">
             <ShieldCheck className="mb-5 size-6 text-[#f6b94b]" /><p className="font-display text-lg font-bold">Food safety first</p>
             <p className="mt-1 text-sm leading-5 text-white/70">Only list food stored safely and ready for same-day pickup.</p>
-            <button className="mt-4 text-sm font-bold text-[#f6b94b]">View checklist →</button>
+            <a href="/safety" className="mt-4 block text-sm font-bold text-[#f6b94b]">View checklist →</a>
           </div>
         </aside>
 
@@ -194,7 +194,7 @@ export default function FoodBridgeApp({ user, profile, signOutPath, todayLabel }
               <p className="eyebrow">{todayLabel}</p>
               <h1 className="font-display mt-2 max-w-2xl text-[clamp(2rem,4vw,3.6rem)] font-bold leading-[0.98] tracking-[-0.055em]">Good food should<br />never go to waste.</h1>
               <p className="mt-4 max-w-xl text-base leading-7 text-[#60756f]">
-                {role === "beneficiary" && "Three safe, same-day donations are available near your home."}
+                {role === "beneficiary" && "Find available same-day donations in your city."}
                 {role === "supplier" && "Share surplus food in minutes and reach verified homes nearby."}
                 {role === "volunteer" && "Help trusted organizations join and keep today’s pickups moving."}
               </p>
@@ -254,16 +254,16 @@ export default function FoodBridgeApp({ user, profile, signOutPath, todayLabel }
               </div>
             </section>
 
-            <aside id="community">
+            <aside id="community"><a href="/community" className="font-bold text-[#d7552d]">Open community →</a>{role === "volunteer" && <a className="block my-4 font-bold" href="/volunteer">Manage organization referrals →</a>}
               <div className="mb-5 flex items-center justify-between"><div><h2 className="font-display text-2xl font-bold tracking-[-0.035em]">Community</h2><p className="mt-1 text-sm text-[#6b7d78]">Impact, shared openly</p></div><button className="text-sm font-bold text-[#d7552d]">View feed</button></div>
-              <article className="rounded-3xl border border-dashed border-[#cbd4cb] bg-white p-8 text-center"><Sparkles className="mx-auto size-8 text-[#d7552d]" /><p className="font-display mt-4 text-xl font-bold">No community updates yet</p><p className="mt-2 text-sm leading-6 text-[#60756f]">Completed pickups can be shared here after photo consent and moderation are enabled.</p></article>
+              <article className="rounded-3xl border border-dashed border-[#cbd4cb] bg-white p-8 text-center"><Sparkles className="mx-auto size-8 text-[#d7552d]" /><p className="font-display mt-4 text-xl font-bold">Stories from our community</p><p className="mt-2 text-sm leading-6 text-[#60756f]">Share a donation story, photo, or thank-you message in the moderated community feed.</p></article>
             </aside>
           </div>
         </main>
       </div>
 
       <nav className="fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-2xl border border-[#dfe4dc] bg-white/95 p-2 shadow-xl backdrop-blur lg:hidden" aria-label="Mobile navigation">
-        <NavItem icon={Home} label="Today" active href="/app" /><NavItem icon={Search} label="Find" href="/app#available-food" />{canDonate && <Button onClick={() => setDialogOpen(true)} size="icon" className="size-12 rounded-full bg-[#d7552d] text-white" aria-label="Offer surplus food"><Plus /></Button>}<NavItem icon={PackageCheck} label="Pickups" href="/pickups" /><NavItem icon={Users} label="Feed" href="/app#community" />
+        <NavItem icon={Home} label="Today" active href="/app" /><NavItem icon={Search} label="Find" href="/app#available-food" />{canDonate && <Button onClick={() => setDialogOpen(true)} size="icon" className="size-12 rounded-full bg-[#d7552d] text-white" aria-label="Offer surplus food"><Plus /></Button>}<NavItem icon={PackageCheck} label="Pickups" href="/pickups" /><NavItem icon={Users} label="Feed" href="/community" />
       </nav>
     </div>
   );

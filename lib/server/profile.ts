@@ -1,11 +1,11 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { profiles } from "@/db/schema";
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { getUser } from "@/lib/server/session";
 import { canAdminister, noStoreJson } from "@/lib/server/security";
 
 export async function getCurrentIdentity() {
-  const user = await getChatGPTUser();
+  const user = await getUser();
   if (!user) return { user: null, profile: null };
   const db = getDb();
   const [profile] = await db.select().from(profiles).where(eq(profiles.id, user.userId)).limit(1);

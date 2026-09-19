@@ -49,7 +49,7 @@ export default function OnboardingForm({ user }: { user: { displayName: string; 
             <div className="flex items-center gap-3"><span className="logo-mark"><Heart className="size-5 fill-current" /></span><span className="font-display text-2xl font-bold">Food<span className="text-[#f28a58]">Bridge</span></span></div>
             <p className="mt-16 text-xs font-bold uppercase tracking-[0.14em] text-[#f6b94b]">Secure account setup</p>
             <h1 className="font-display mt-3 text-4xl font-bold leading-tight tracking-[-0.04em] sm:text-5xl">Tell us how you’ll take part.</h1>
-            <p className="mt-5 max-w-md text-base leading-7 text-white/70">Your ChatGPT sign-in protects your identity. Organization details are reviewed before food can be listed or claimed.</p>
+            <p className="mt-5 max-w-md text-base leading-7 text-white/70">Your verified email protects your account. Organization details are reviewed before food can be listed or claimed.</p>
           </div>
           <div className="mt-12 flex items-start gap-3 rounded-2xl bg-white/8 p-4"><UserRoundCheck className="mt-0.5 size-5 text-[#f6b94b]" /><div><p className="font-semibold">Signed in as {user.displayName}</p><p className="mt-1 text-sm text-white/55">{user.email}</p></div></div>
         </section>
